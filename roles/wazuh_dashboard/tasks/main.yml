@@ -22,15 +22,44 @@
     mode: '0400'
   loop:
     - { src: "{{ dashboard_node_name }}.pem", dest: dashboard.pem }
-    - { src: "{{ deshboard_node_name }}-key.pem", dest: dashboard-key.pem }
+    - { src: "{{ dashboard_node_name }}-key.pem", dest: dashboard-key.pem }
     - { src: root-ca.pem, dest: root-ca.pem }
 
-- name: Ensure server .host is 0.0.0.0
+- name: Ensure server .host is indexer_host
   ansible.builtin.lineinfile:
-    path: /etc/wazuh-dashboard/opensearch_dashboard.yml
-    regexp: '^server/.host:'
-    line: 'server.host: 0.0.0.0'
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    regexp: '^opensearch/.host:'
+    line: 'opensearch.host: ["https://{{ indexer_host | default("localhost") }}:9200]'
   notify: restart wazuh-dashboard
+
+- name: Fix opensearch.hosts to be a YAML list
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    regexp: '^opensearch\.hosts:.*'
+    line: 'opensearch.hosts: ["https://localhost:9200"]'
+
+- name: Remove invalid duplicate opensearch.host key
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    regexp: '^opensearch\.host:.*'
+    state: absent
+
+- name: Set dashboard service account credentials
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    regexp: '^#?opensearch\.username:.*'
+    line: 'opensearch.username: kibanaserver'
+
+- name: Set dashboard service account password
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboards.yml
+    regexp: '^#?opensearch\.passowrd:.*'
+    line: 'opensearch.password: "{{ kibanaserver_password }}"'
+
+- name: Restart wazuh-dashboard
+  ansible.builtin.systemd:
+    name: wazuh-dashboard
+    state: restarted
 
 - name: Enable and start wazuh-dashboard
   ansible.builtin.systemd:

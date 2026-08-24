@@ -3,7 +3,7 @@
   ansible.builtin.rpm_key:
     key: https://packages.wazuh.com/key/GPG-KEY-WAZUH
     state: present
-  when: ansible_facts['os_family'] == "Fedora"
+  when: ansible_facts['os_family'] == "RedHat"
 
 - name: Add Wazuh yum repo
   ansible.builtin.yum_repository:
@@ -13,7 +13,7 @@
     gpgcheck: True
     gpgkey: https://packages.wazuh.com/key/GPG-KEY-WAZUH
     enabled: True
-  when: ansbile_facts['os_family'] == "Fedora"
+  when: ansible_facts['os_family'] == "RedHat"
 
 - name: Install Wazuh-indexer 
   ansible.builtin.package:
@@ -30,7 +30,7 @@
 
 - name: Deploy indexer cert + key (renamed on copy)
   ansible.builtin.copy:
-    src: "{{ cert_dir_local }}/{{ item.dest }}"
+    src: "{{ cert_dir_local }}/{{ item.src }}"
     dest: "/etc/wazuh-indexer/certs/{{ item.dest }}"
     remote_src: True
     owner: wazuh-indexer
@@ -48,7 +48,7 @@
     target: '/etc/wazuh-indexer/certs(/.*)?'
     setype: etc_t
     state: present
-  when: ansible_facts['os_family'] == "Fedora"
+  when: ansible_facts['os_family'] == "RedHat"
   notify: restorecon indexer certs
 
 - name: Set vm.max_map_count
@@ -57,6 +57,12 @@
     value: '262144'
     state: present 
     reload: True
+
+- name: Initialize Opensearch security index
+  ansible.builtin.command:
+    cmd: /usr/share/wazuh-indexer/bin/indexer-security-init.sh
+  register: security_init
+  changed_when: "'Done' in security_init.stdout or security_init.rc == 0"
 
 - name: Enable and start wazuh-indexer
   ansible.builtin.systemd:

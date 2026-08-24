@@ -1,0 +1,67 @@
+---
+- name: Install filebeat package
+  ansible.builtin.package:
+    name: filebeat
+    state: present
+
+- name: Downloal Wazuh filebeat module
+  ansible.builtin.get_url:
+    url: "https://packages.wazuh.com/{{ wazuh_filebeat_repo }}/filebeat/wazuh-filebeat-0.4.tar.gz"
+    dest: /tmp/wazuh-filebeat.tar.gz
+    mode: '0644'
+
+- name: Extract Wazuh filebeat module
+  ansible.builtin.unarchive:
+    src: /tmp/wazuh-filebeat.tar.gz
+    dest: /usr/share/filebeat/module
+    remote_src: True
+
+- name: Template filebeat filebeat.yml
+  ansible.builtin.template:
+    src: filebeat.yml.j2
+    dest: /etc/filebeat/filebeat.yml
+    owner: root
+    group: root
+    mode: '0400'
+  notify: restart filebeat
+
+- name: Create filebeat certs directory
+  ansible.builtin.file:
+    path: /etc/filebeat/certs
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Deploy filebeat cert + key root-ca
+  ansible.builtin.copy:
+    src: "{{ cert_dir_local }}/{{ item.src }}"
+    dest: "/etc/filebeat/certs/{{ item.dest }}"
+    remote_src: True
+    owner: root
+    group: root
+    mode: '0400'
+  loop:
+    - { src: "{{ manager_node_name }}.pem", dest: "filebeat.pem" }
+    - { src: "{{ manager_node_name }}-key.pem", dest: "filebeat-key.pem" }
+    - { src: "root-ca.pem", dest: "root-ca.pem"}
+
+- name: Download Wazuh index template
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/wazuh/wazuh/v4.9.0/extensions/elasticsearch/7.x/wazuh-template.json"
+    dest: /etc/filebeat/wazuh-template.json
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Restart Wazuh Manager to generate initial alerts
+  ansible.builtin.systemd:
+    name: wazuh-manager
+    state: restarted
+
+- name: Enable and start filebeat 
+  ansible.builtin.systemd:
+    name: filebeat
+    state: started
+    enabled: True
+

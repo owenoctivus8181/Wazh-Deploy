@@ -1,0 +1,40 @@
+filebeat.input:
+  - type: log
+    paths:
+      - /var/ossec/logs/alerts/alerts.json
+
+filebeat.modules:
+  - module: wazuh
+    alerts:
+      enabled: True
+    archives:
+      enabled: False
+
+filebeat.config.modules:
+  path: '/etc/filebeat/modules.d/*.yml'
+  reload.enabled: False
+
+setup.template.json.enabled: True
+setup.template.json.path: '/etc/filebeat/wazuh-template.json'
+setup.template.json.name: 'wazuh'
+setup.ilm.overwrite: True
+setup.ilm.enabled: False
+
+output.elasticsearch:
+  hosts: ["https://192.168.122.68:9200"]
+  protocol: "https"
+  username: "{{ filebeat_username | default('admin') }}"
+  password: "{{ filebeat_password }}"
+  ssl.certificate_authorities:
+    - /etc/filebeat/certs/root-ca.pem
+  ssl.certificate: /etc/filebeat/certs/filebeat.pem
+  ssl.key: /etc/filebeat/certs/filebeat-key.pem
+  
+logging.level: info
+logging.to_files: True
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+

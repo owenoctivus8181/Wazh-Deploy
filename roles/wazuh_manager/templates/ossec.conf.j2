@@ -4,6 +4,13 @@
     <logall>yes</logall>
     <logall_json>yes</logall_json>
   </global>
+
+  <remote>
+    <connection>secure</connection>
+    <port>1514</port>
+    <protocol>tcp</protocol>
+    <queue_size>131072</queue_size>
+  </remote>
   
   <syscheck>
     <disabled>no</disabled>
@@ -28,7 +35,7 @@
 
   <vulnerability-detection>
     <enabled>yes</enabled>
-    <index-status<yes</index-status>
+    <index-status>yes</index-status>
     <feed-update-interval>60m</feed-update-interval>
   </vulnerability-detection>
   
