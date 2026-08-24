@@ -1,6 +1,16 @@
-wauzh_major: "4.14"
+wazuh_major: "4.14"
 cert_dir_local: "/root/wazuh-certificates"
 indexer_node_name: "node-1"
 manager_node_name: "wazuh-1"
-dashboard_node_name: "dashboard"
+dashboard_node_name: "wazuh-1"
+wazuh_firewall_ports:
+  - "1514/tcp"
+  - "1515/tcp"
+  - "55000/tcp"
+  - "9200/tcp"
+  - "443/tcp"
+kibanaserver_password: "YOUR_PASSWORD_KIBANASERVER"
+filebeat_username: "YOUR_USERNAEM_FILEBEAT"
+filebeat_password: "YOUR_PASSWORD_FILEBEAT"
+wazuh_filebeat_repo: "4.x"
 

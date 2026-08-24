@@ -1,9 +1,11 @@
 ---
 - name: Deploy Wazuh all-in-one stack
-  hosts: wazuh-aio
+  hosts: all
   become: True
   roles:
+    - firewall
     - wazuh_certs
     - wazuh_indexer
     - wazuh_manager
+    - wazuh_filebeat
     - wazuh_dashboard
