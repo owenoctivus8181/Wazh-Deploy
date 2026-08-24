@@ -1,0 +1,6 @@
+wauzh_major: "4.14"
+cert_dir_local: "/root/wazuh-certificates"
+indexer_node_name: "node-1"
+manager_node_name: "wazuh-1"
+dashboard_node_name: "dashboard"
+

@@ -1,0 +1,39 @@
+<ossec_config>
+  <global>
+    <jsonout_output>yes</jsonout_output>
+    <logall>yes</logall>
+    <logall_json>yes</logall_json>
+  </global>
+  
+  <syscheck>
+    <disabled>no</disabled>
+    <frequency>43200</frequency>
+    <scan_on_start>yes</scan_on_start>
+    <directories realtime="yes" report_changes="yes" check_all="yes">/etc/,/usr/bin,/usr/sbin</directories>
+    <directories whodata="yes" check_all="yes">/etc/passwd,/etc/shadow,/etc/sudoers,/etc/ssh/sshd_config</directories>
+  </syscheck>
+
+  <rootcheck>
+    <disabled>no</disabled>
+    <check_files>yes</check_files>
+    <check_trojans>yes</check_trojans>
+    <frequency>43200</frequency>
+  </rootcheck>
+
+  <sca>
+    <enabled>yes</enabled>
+    <scan_on_start>yes</scan_on_start>
+    <interval>12h</interval>
+  </sca>
+
+  <vulnerability-detection>
+    <enabled>yes</enabled>
+    <index-status<yes</index-status>
+    <feed-update-interval>60m</feed-update-interval>
+  </vulnerability-detection>
+  
+  <localfile>
+    <log_format>journald</log_format>
+    <location>journald</location>
+  </localfile>
+</ossec_config>

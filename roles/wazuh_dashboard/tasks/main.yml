@@ -1,0 +1,40 @@
+---
+- name: Install wazuh-dashboard
+  ansible.builtin.package:
+    name: wazuh-dashboard
+    state: present
+
+- name: Create dashboard certs directory
+  ansible.builtin.file:
+    path: /etc/wazuh-dashboard/certs
+    state: directory
+    owner: wazuh-dashboard
+    group: wazuh-dashboard
+    mode: '0500'
+
+- name: Deploy dashboard certs
+  ansible.builtin.copy:
+    src: "{{ cert_dir_local }}/{{ item.src }}"
+    dest: "/etc/wazuh-dashboard/certs/{{ item.dest }}"
+    remote_src: True
+    owner: wazuh-dashboard
+    group: wazuh-dashboard
+    mode: '0400'
+  loop:
+    - { src: "{{ dashboard_node_name }}.pem", dest: dashboard.pem }
+    - { src: "{{ deshboard_node_name }}-key.pem", dest: dashboard-key.pem }
+    - { src: root-ca.pem, dest: root-ca.pem }
+
+- name: Ensure server .host is 0.0.0.0
+  ansible.builtin.lineinfile:
+    path: /etc/wazuh-dashboard/opensearch_dashboard.yml
+    regexp: '^server/.host:'
+    line: 'server.host: 0.0.0.0'
+  notify: restart wazuh-dashboard
+
+- name: Enable and start wazuh-dashboard
+  ansible.builtin.systemd:
+    name: wazuh-dashboard
+    enabled: True
+    state: started
+

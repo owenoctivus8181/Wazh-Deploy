@@ -1,0 +1,25 @@
+---
+- name: Check if certs already genrated
+  ansible.builtin.stat:
+    path: "{{ cert_dir_local}}/root-ca.pem"
+  register: certs_exist
+
+- name: Dwonload wazuh-certs-tool.sh
+  ansible.builtin.get_url:
+    url: "https://packages.wazuh.com/{{ wazuh_major }}/wazuh-certs-tool.sh"
+    dest: /root/wazuh-certs-tool.sh
+    mode: '0755'
+  when: not certs_exist.stat.exists 
+
+- name: Templat config.yml for cert generation
+  ansible.builtin.template:
+    src: config.yml.j2
+    dest: /root/config.yml
+  when: not certs_exist.stat.exists
+
+- name: Generate certificates (idempotent via 'creates')
+  ansible.builtin.command:
+    cmd: bash /root/wazuh-certs-tool.sh -A
+    chdir: /root
+    creates: "{{ cert_dir_local }}/root-ca.pem"
+

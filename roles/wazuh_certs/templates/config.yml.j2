@@ -1,0 +1,10 @@
+nodes:
+  indexer:
+    - name: {{ indexer_node_name }}
+      ip: "{{ ansible_default_ipv4.address }}"
+  server:
+    - name: {{ manager_node_name }}
+      ip: "{{ ansible_default_ipv4.address }}"
+  dashboard:
+    - name: {{ manager_node_name }}
+      ip: "{{ ansible_default_ipv4.address }}"

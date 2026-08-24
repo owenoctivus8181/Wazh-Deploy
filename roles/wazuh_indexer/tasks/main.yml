@@ -1,0 +1,66 @@
+---
+- name: Add Wazuh GPG key (Fedora family)
+  ansible.builtin.rpm_key:
+    key: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+    state: present
+  when: ansible_facts['os_family'] == "Fedora"
+
+- name: Add Wazuh yum repo
+  ansible.builtin.yum_repository:
+    name: wazuh
+    description: Wazuh repo
+    baseurl: "https://packages.wazuh.com/4.x/yum/"
+    gpgcheck: True
+    gpgkey: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+    enabled: True
+  when: ansbile_facts['os_family'] == "Fedora"
+
+- name: Install Wazuh-indexer 
+  ansible.builtin.package:
+    name: wazuh-indexer
+    state: present
+
+- name: Create certs directory with correct ownership
+  ansible.builtin.file:
+    path: /etc/wazuh-indexer/certs
+    state: directory
+    owner: wazuh-indexer
+    group: wazuh-indexer
+    mode: '0500'
+
+- name: Deploy indexer cert + key (renamed on copy)
+  ansible.builtin.copy:
+    src: "{{ cert_dir_local }}/{{ item.dest }}"
+    dest: "/etc/wazuh-indexer/certs/{{ item.dest }}"
+    remote_src: True
+    owner: wazuh-indexer
+    group: wazuh-indexer
+    mode: '0400'
+  loop:
+    - { src: "{{ indexer_node_name }}.pem", dest: indexer.pem}
+    - { src: "{{ indexer_node_name }}-key.pem", dest: indexer-key.pem}
+    - { src: admin.pem, dest: admin.pem }
+    - { src: admin-key.pem,dest: admin-key.pem }
+    - { src: root-ca.pem, dest: root-ca.pem }
+
+- name: Ensure SELinux fcontext is correct (Fedora family)
+  community.general.sefcontext:
+    target: '/etc/wazuh-indexer/certs(/.*)?'
+    setype: etc_t
+    state: present
+  when: ansible_facts['os_family'] == "Fedora"
+  notify: restorecon indexer certs
+
+- name: Set vm.max_map_count
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: '262144'
+    state: present 
+    reload: True
+
+- name: Enable and start wazuh-indexer
+  ansible.builtin.systemd:
+    name: wazuh-indexer
+    enabled: True
+    state: started
+

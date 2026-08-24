@@ -1,0 +1,35 @@
+---
+- name: Install wazuh-manager 
+  ansible.builtin.package:
+    name: wazuh-manager
+    state: present
+
+- name: Create filebeat certs directory 
+  ansible.builtin.file:
+    path: /etc/filebeat/certs
+    state: directory
+    mode: '0500'
+
+- name: Deploy filebeat cert + key + root-ca 
+  ansible.builtin.copy:
+    src: "{{ cert_dir_local }}/{{ item.src }}"
+    dest: "/etc/filebeat/certs/{{ item.dest }}"
+    remote_src: True
+    mode: '0400'
+  loop:
+    - { src: "{{ manager_node_name }}.pem", dest: filebeat.pem}
+    - { src: "{{ manager_node_name }}-key.pem", dest: filebeat-key.pem}
+    - { src: root-ca.pem, dest: root-ca.pem }
+
+- name: Template ossec.conf (five-module config)
+  ansible.builtin.template:
+    src: ossec.conf.j2
+    dest: /var/ossec/etc/ossec.conf
+    validate: 'xmllint --noout %s'
+  notify: restart wazuh-manager
+
+- name: Enable and start wazuh-manager
+  ansible.builtin.systemd:
+    name: wazuh-manager
+    enabled: True
+    state: started
