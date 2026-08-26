@@ -9,8 +9,8 @@ wazuh_firewall_ports:
   - "55000/tcp"
   - "9200/tcp"
   - "443/tcp"
-kibanaserver_password: "YOUR_PASSWORD_KIBANASERVER"
-filebeat_username: "YOUR_USERNAEM_FILEBEAT"
-filebeat_password: "YOUR_PASSWORD_FILEBEAT"
+kibanaserver_password: "concluation"
+filebeat_username: "admin"
+filebeat_password: "admin"
 wazuh_filebeat_repo: "4.x"
 
